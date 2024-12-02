@@ -1,3 +1,4 @@
+// Package main ?
 package main
 
 import (
@@ -5,9 +6,28 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
+	"sync"
 )
+
+type counter struct {
+	mu    sync.Mutex
+	value int
+}
+
+func (c *counter) increment() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.value++
+}
+
+func (c *counter) getValue() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.value
+}
 
 func main() {
 	file, _ := os.Open("task2.txt")
@@ -18,14 +38,20 @@ func main() {
 		}
 	}(file)
 	scanner := bufio.NewScanner(file)
-	result := 0
+	wg := sync.WaitGroup{}
+	result := &counter{}
 	for scanner.Scan() {
 		line := scanner.Text()
-		if check(parse(line), 1) {
-			result++
-		}
+		wg.Add(1)
+		go func() {
+			if check(parse(line), 1) {
+				result.increment()
+			}
+			wg.Done()
+		}()
 	}
-	fmt.Println(result)
+	wg.Wait()
+	fmt.Println(result.getValue())
 }
 
 func parse(report string) []int {
@@ -56,10 +82,7 @@ func check(vals []int, tolerate int) bool {
 }
 
 func removeAt(vals []int, index int) []int {
-	res := make([]int, 0, len(vals)-1)
-	res = append(res, vals[:index]...)
-	res = append(res, vals[index+1:]...)
-	return res
+	return slices.Concat(vals[:index], vals[index+1:])
 }
 
 func testVals(first, second, inc int) bool {
