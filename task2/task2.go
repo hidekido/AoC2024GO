@@ -30,7 +30,7 @@ func (c *counter) getValue() int {
 }
 
 func main() {
-	file, _ := os.Open("task2.txt")
+	file, _ := os.Open("task2/task2.txt")
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
