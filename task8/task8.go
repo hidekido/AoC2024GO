@@ -80,6 +80,9 @@ func search2(n, m int, freqs map[rune][][]int) int {
 	}
 	res := 0
 	for _, freq := range freqs {
+		if len(freq) < 2 {
+			continue
+		}
 		for i, first := range freq {
 			if !marked[first[0]][first[1]] {
 				res++
